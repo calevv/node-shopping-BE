@@ -33,8 +33,9 @@ productController.getProducts = async (req, res) => {
     const cond = name
       ? {
           name: { $regex: name, $options: "i" },
+          isDeleted: false,
         }
-      : {};
+      : { isDeleted: false };
 
     let query = Product.find(cond);
 
@@ -53,6 +54,50 @@ productController.getProducts = async (req, res) => {
     const productList = await query.exec();
     responseData.data = productList;
     return res.status(200).json(responseData);
+  } catch (err) {
+    return res.status(400).json({ status: "error", error: err.message });
+  }
+};
+
+productController.updateProduct = async (req, res) => {
+  try {
+    const productId = req.params.id;
+    const { sku, name, image, price, category, description, stock, status } =
+      req.body;
+    const product = await Product.findByIdAndUpdate(
+      { _id: productId },
+      { sku, name, image, price, category, description, stock, status },
+      { new: true }
+    );
+
+    if (!product) throw new Error("item doesn't exist");
+
+    return res.status(200).json({ status: "success", data: product });
+  } catch (err) {
+    return res.status(400).json({ status: "error", error: err.message });
+  }
+};
+
+productController.deleteProduct = async (req, res) => {
+  try {
+    const productId = req.params.id;
+    const product = await Product.findByIdAndUpdate(
+      { _id: productId },
+      { isDeleted: true }
+    );
+    if (!product) throw new Error("No item found");
+    res.status(200).json({ status: "success" });
+  } catch (err) {
+    return res.status(400).json({ status: "error", error: err.message });
+  }
+};
+
+productController.getProductById = async (req, res) => {
+  try {
+    const productId = req.params.id;
+    const product = await Product.findById(productId);
+    if (!product) throw new Error("No item found");
+    res.status(200).json({ status: "success", data: product });
   } catch (err) {
     return res.status(400).json({ status: "error", error: err.message });
   }
