@@ -8,6 +8,23 @@ productController.createProduct = async (req, res) => {
   try {
     const { sku, name, image, price, category, description, stock, status } =
       req.body;
+
+    if (!image) {
+      return res.status(400).json({
+        status: "error",
+        error: `상품 이미지가 비어있어요.`,
+      });
+    }
+
+    // SKU 중복 체크
+    const existingProduct = await Product.findOne({ sku });
+    if (existingProduct) {
+      return res.status(400).json({
+        status: "error",
+        error: `상품번호 ${sku}는 이미 존재합니다.`,
+      });
+    }
+
     const product = new Product({
       sku,
       name,
